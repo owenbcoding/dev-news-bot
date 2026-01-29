@@ -1,4 +1,12 @@
 import os
+import sys
+
+# If run with system python, re-exec with project .venv so dependencies are found
+if not (getattr(sys, "base_prefix", sys.prefix) != sys.prefix):
+    venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "bin", "python")
+    if os.path.isfile(venv_python):
+        os.execv(venv_python, [venv_python] + sys.argv)
+
 import json
 import asyncio
 import re
@@ -15,7 +23,7 @@ load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", "0"))
-POLL_MINUTES = int(os.getenv("POLL_MINUTES", "60"))
+POLL_HOURS = float(os.getenv("POLL_HOURS", "3"))
 
 # Comma-separated Slack incoming webhooks (one per channel is typical).
 # Example: SLACK_WEBHOOK_URLS="https://hooks.slack.com/services/AAA/BBB/CCC,https://hooks.slack.com/services/DDD/EEE/FFF"
@@ -132,7 +140,7 @@ async def post_to_slack(session: aiohttp.ClientSession, item: Dict) -> None:
             print(f"[Slack] Post failed: {e}")
 
 
-@tasks.loop(minutes=POLL_MINUTES)
+@tasks.loop(hours=POLL_HOURS)
 async def poll_and_post():
     channel = client.get_channel(CHANNEL_ID)
     if channel is None:
