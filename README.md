@@ -32,7 +32,23 @@ This bot collects and posts the latest developer news from multiple sources, kee
 
 ## Usage
 
-_Usage instructions will be added as the project develops._
+### Run manually
+```bash
+python3 bot.py
+# or
+./run
+```
+
+### Run with PM2 (recommended on Pi)
+The bot is configured to run under PM2 and **auto-start when the Pi boots**.
+
+- **Start the bot:** `pm2 start ecosystem.config.cjs`
+- **Stop:** `pm2 stop dev-news-bot`
+- **Restart:** `pm2 restart dev-news-bot`
+- **Logs:** `pm2 logs dev-news-bot`
+- **Status:** `pm2 status`
+
+After changing the process list (start/stop apps), run `pm2 save` so it persists across reboots. Startup on boot is already enabled via `pm2 startup`.
 
 ## License
 
