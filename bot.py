@@ -42,7 +42,7 @@ FEEDS: List[Tuple[str, str]] = [
     ("Product Hunt (Main)", "https://www.producthunt.com/feed"),
 ]
 
-SEEN_PATH = "seen.json"
+SEEN_PATH = os.getenv("SEEN_PATH", "seen.json")
 MAX_POSTS_PER_RUN = 2  # Post items from all feeds in each batch
 MAX_PER_SOURCE = 3  # Max items per source per batch
 

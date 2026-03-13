@@ -1,0 +1,23 @@
+# dev-news-bot — for Raspberry Pi / Portainer
+# Build: docker compose build
+# Run:   docker compose up -d
+# Local: put DISCORD_TOKEN, CHANNEL_ID in .env (Compose loads it for substitution).
+# Portainer: add the same vars in the Stack → Environment variables.
+
+services:
+  dev-news-bot:
+    build: .
+    image: dev-news-bot:latest
+    container_name: dev-news-bot
+    restart: unless-stopped
+    environment:
+      - SEEN_PATH=/data/seen.json
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - CHANNEL_ID=${CHANNEL_ID}
+      - POLL_HOURS=${POLL_HOURS:-3}
+      - SLACK_WEBHOOK_URLS=${SLACK_WEBHOOK_URLS:-}
+    volumes:
+      - dev-news-bot-data:/data
+
+volumes:
+  dev-news-bot-data:
