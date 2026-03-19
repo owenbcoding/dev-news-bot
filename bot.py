@@ -43,8 +43,8 @@ FEEDS: List[Tuple[str, str]] = [
 ]
 
 SEEN_PATH = os.getenv("SEEN_PATH", "seen.json")
-MAX_POSTS_PER_RUN = 2  # Post items from all feeds in each batch
-MAX_PER_SOURCE = 3  # Max items per source per batch
+MAX_POSTS_PER_RUN = 8   # Total posts per run (2 per source × 4 feeds)
+MAX_PER_SOURCE = 2     # Max items per source per batch
 
 intents = discord.Intents.default()  # posting only; no message-content needed
 client = discord.Client(intents=intents)

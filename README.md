@@ -8,7 +8,7 @@ A Discord bot that aggregates developer news from RSS feeds (Hacker News, DEV Co
 - **Discord embeds** with title, link, description, and source
 - **Optional Slack** posting via webhook URLs
 - **Deduplication** via `seen.json` (keeps last ~2000 IDs)
-- **Round-robin batching**: 2 posts per run, max 3 per source
+- **Round-robin batching**: 8 posts per run, 2 per source (4 feeds)
 - **Scheduled polling** every `POLL_HOURS` (default 3)
 
 ## Quick Setup
