@@ -1,34 +1,60 @@
 # Dev News Bot
 
-A bot that automatically posts daily developer news from various platforms.
-
-## Overview
-
-This bot collects and posts the latest developer news from multiple sources, keeping developers informed about the latest trends, updates, and happenings in the tech world.
+A Discord bot that aggregates developer news from RSS feeds (Hacker News, DEV Community, daily.dev, Product Hunt) and posts them automatically to a Discord channel (and optionally Slack).
 
 ## Features
 
-- Aggregates news from various developer platforms
-- Posts daily updates automatically
-- Curates relevant content for developers
+- **RSS aggregation** from Hacker News, DEV Community, daily.dev, Product Hunt
+- **Discord embeds** with title, link, description, and source
+- **Optional Slack** posting via webhook URLs
+- **Deduplication** via `seen.json` (keeps last ~2000 IDs)
+- **Round-robin batching**: 2 posts per run, max 3 per source
+- **Scheduled polling** every `POLL_HOURS` (default 3)
 
-## Setup
+## Quick Setup
+
+1. Clone and configure:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your DISCORD_TOKEN and CHANNEL_ID
+   ```
+
+2. See [Verifying the Bot](#verifying-the-bot) before running 24/7.
+
+## Verifying the Bot
+
+Before running 24/7, verify the bot works correctly:
+
+1. **Test Discord posting** (requires `.env` with valid `DISCORD_TOKEN` and `CHANNEL_ID`):
+   ```bash
+   python3 test_post.py
+   ```
+   This sends a test message to your channel. If it succeeds, the bot can connect and post.
+
+2. **Run the bot locally** (optional dry run):
+   ```bash
+   python3 bot.py
+   ```
+   You should see:
+   - `✓ Logged in as <BotName>`
+   - `✓ Watching 4 feeds`
+   - Within a few seconds, either `[Posted] ...` or `[Info] No new items to post`
+   Press Ctrl+C to stop.
+
+## Setup (Local Development)
 
 1. Clone this repository
 2. Create a virtual environment:
    ```bash
    python -m venv .venv
+   source .venv/bin/activate   # Linux/Mac
+   # or  .venv\Scripts\activate  # Windows
    ```
-3. Activate the virtual environment:
-   ```bash
-   source .venv/bin/activate  # On Linux/Mac
-   # or
-   .venv\Scripts\activate  # On Windows
-   ```
-4. Install dependencies:
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
+4. Configure `.env` (see `.env.example`)
 
 ## Usage
 
@@ -39,40 +65,46 @@ python3 bot.py
 ./run
 ```
 
-### Run with PM2 (recommended on Pi)
-The bot is configured to run under PM2 and **auto-start when the Pi boots**.
-
-- **Start the bot:** `pm2 start ecosystem.config.cjs`
+### Run with PM2 (on Pi, no Docker)
+- **Start:** `pm2 start ecosystem.config.cjs`
 - **Stop:** `pm2 stop dev-news-bot`
-- **Restart:** `pm2 restart dev-news-bot`
 - **Logs:** `pm2 logs dev-news-bot`
-- **Status:** `pm2 status`
+- Run `pm2 save` after changes so it persists across reboots.
 
-After changing the process list (start/stop apps), run `pm2 save` so it persists across reboots. Startup on boot is already enabled via `pm2 startup`.
+### Run with Docker (Raspberry Pi 24/7)
 
-### Run with Docker (Raspberry Pi / Portainer)
+The image is ARM-compatible and works on Raspberry Pi 4/5 (64-bit) and Pi 3/Zero 2 W.
 
-The image is multi-arch (ARM64/ARMv7) and works on Raspberry Pi.
-
-**Local (docker compose):**
+**On the Pi:**
 
 ```bash
-cp .env.example .env   # edit with your DISCORD_TOKEN and CHANNEL_ID
+# 1. Clone and configure
+git clone <your-repo-url> dev-news-bot
+cd dev-news-bot
+cp .env.example .env
+nano .env   # set DISCORD_TOKEN and CHANNEL_ID
+
+# 2. Build and run
 docker compose build && docker compose up -d
+
+# 3. Check logs
+docker compose logs -f dev-news-bot
 ```
 
-**Portainer:**
+**Using Portainer:**
 
-1. In Portainer, create a new **Stack** (or use **App Templates** and paste the compose).
-2. Build and deploy from this repo (clone URL or upload `Dockerfile` + `docker-compose.yml` + `bot.py` + `requirements.txt`).
-3. Add environment variables in the stack:
+1. Create a new **Stack** from this repo
+2. Add environment variables in the stack:
    - `DISCORD_TOKEN` (required)
    - `CHANNEL_ID` (required)
    - `POLL_HOURS` (optional, default `3`)
-   - `SLACK_WEBHOOK_URLS` (optional, comma-separated webhook URLs)
-4. The stack uses a named volume `dev-news-bot-data` for `seen.json` so state persists across restarts.
+   - `SLACK_WEBHOOK_URLS` (optional, comma-separated)
+3. The named volume `dev-news-bot-data` persists `seen.json` across restarts
 
-No port mapping is needed; the bot only makes outbound requests.
+**Behavior in Docker:**
+- `restart: unless-stopped` keeps it running 24/7
+- No inbound ports; bot only makes outbound requests
+- State is stored in a Docker volume (`dev-news-bot-data` → `/data/seen.json`)
 
 ## License
 
