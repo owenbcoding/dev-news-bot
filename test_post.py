@@ -9,7 +9,7 @@ import discord
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", "0"))
+CHANNEL_ID = int(os.getenv("DEV_CHANNEL_ID") or os.getenv("CHANNEL_ID", "0"))
 
 if not DISCORD_TOKEN or CHANNEL_ID == 0:
     print("ERROR: Missing DISCORD_TOKEN or CHANNEL_ID in .env")
@@ -25,15 +25,20 @@ async def on_ready():
         channel = await client.fetch_channel(CHANNEL_ID)
         print(f"✓ Fetched channel: {channel.name}")
         
-        # Send a test message
-        test_msg = """**Test Post - AI News Bot**
+        embed = discord.Embed(
+            title="Test Post - Dev News Bot",
+            url="https://example.com/dev-news-bot",
+            description="This is a test embed to verify the bot can post article-style messages.",
+        )
+        embed.add_field(
+            name="Read article",
+            value="https://example.com/dev-news-bot",
+            inline=False,
+        )
+        embed.set_footer(text="dev-news-bot | test message")
 
-This is a test message to verify the bot can post to this channel.
-
-If you see this, the bot is working correctly! ✅"""
-        
-        await channel.send(test_msg)
-        print("✓ Test message sent successfully!")
+        await channel.send(embed=embed)
+        print("✓ Test embed sent successfully!")
         
     except discord.NotFound:
         print(f"ERROR: Channel {CHANNEL_ID} not found")

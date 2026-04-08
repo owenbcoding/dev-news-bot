@@ -1,15 +1,23 @@
 # Dev News Bot
 
-A Discord bot that aggregates developer news from RSS feeds (Hacker News, DEV Community, daily.dev, Product Hunt) and posts them automatically to a Discord channel (and optionally Slack).
+A Discord bot that aggregates developer news from RSS feeds and posts them to Discord using a shared pipeline that can be reused by other news bots with different feed lists and channel IDs.
 
 ## Features
 
 - **RSS aggregation** from Hacker News, DEV Community, daily.dev, Product Hunt
-- **Discord embeds** with title, link, description, and source
-- **Optional Slack** posting via webhook URLs
-- **Deduplication** via `seen.json` (keeps last ~2000 IDs)
+- **Shared pipeline** in `news_core.py` for fetch, URL normalization, dedupe, archive, and formatting
+- **Discord embeds** with clickable title, cleaned summary, explicit `Read article` field, and source/date footer
+- **Deduplication** via `sha256(canonical_url)` instead of feed GUIDs
+- **Persistent archive** in append-only `.jsonl` format with full posted history
+- **Slash command** `/latestlinks` to show recent saved links from the archive
 - **Round-robin batching**: 8 posts per run, 2 per source (4 feeds)
-- **Scheduled polling** every `POLL_HOURS` (default 3)
+- **Scheduled posting** twice daily at `09:00 UTC` and `17:00 UTC`
+
+## Project Structure
+
+- `news_core.py`: shared logic for fetching feeds, normalizing URLs, dedupe, storage, embed formatting, and Discord command handling
+- `dev_news_bot.py`: dev-news-specific feed list and environment-driven config
+- `bot.py`: compatibility shim that runs `dev_news_bot.py`
 
 ## Quick Setup
 
@@ -29,17 +37,17 @@ Before running 24/7, verify the bot works correctly:
    ```bash
    python3 test_post.py
    ```
-   This sends a test message to your channel. If it succeeds, the bot can connect and post.
+   This sends a test embed to your channel. If it succeeds, the bot can connect and post.
 
 2. **Run the bot locally** (optional dry run):
    ```bash
-   python3 bot.py
+   python3 dev_news_bot.py
    ```
    You should see:
    - `✓ Logged in as <BotName>`
    - `✓ Watching 4 feeds`
-   - Within a few seconds, either `[Posted] ...` or `[Info] No new items to post`
-   Press Ctrl+C to stop.
+   - `✓ Scheduled posts at 09:00 UTC and 17:00 UTC`
+   The bot will wait until the next scheduled run time before posting. Press Ctrl+C to stop.
 
 ## Setup (Local Development)
 
@@ -60,7 +68,7 @@ Before running 24/7, verify the bot works correctly:
 
 ### Run manually
 ```bash
-python3 bot.py
+python3 dev_news_bot.py
 # or
 ./run
 ```
@@ -97,14 +105,31 @@ docker compose logs -f dev-news-bot
 2. Add environment variables in the stack:
    - `DISCORD_TOKEN` (required)
    - `CHANNEL_ID` (required)
-   - `POLL_HOURS` (optional, default `3`)
-   - `SLACK_WEBHOOK_URLS` (optional, comma-separated)
-3. The named volume `dev-news-bot-data` persists `seen.json` across restarts
+   - `DEV_CHANNEL_ID` (optional override for dev bot channel)
+   - `ARCHIVE_PATH` (optional, default `/data/dev_news_archive.jsonl`)
+   - `DEDUPE_INDEX_PATH` (optional, default `/data/dev_news_dedupe.json`)
+   - `SEND_TEXT_DIGEST` (optional, default `false`)
+3. The named volume `dev-news-bot-data` persists the archive and dedupe index across restarts
 
 **Behavior in Docker:**
 - `restart: unless-stopped` keeps it running 24/7
+- Posts are sent automatically at `09:00 UTC` and `17:00 UTC`
 - No inbound ports; bot only makes outbound requests
-- State is stored in a Docker volume (`dev-news-bot-data` → `/data/seen.json`)
+- State is stored in a Docker volume:
+  - archive at `/data/dev_news_archive.jsonl`
+  - dedupe index at `/data/dev_news_dedupe.json`
+
+## Stored Article Fields
+
+Each successfully posted article is saved with:
+
+- `source`
+- `title`
+- `url`
+- `canonical_url`
+- `published_at`
+- `posted_at`
+- `discord_message_id`
 
 ## License
 

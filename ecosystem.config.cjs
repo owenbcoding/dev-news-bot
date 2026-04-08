@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "dev-news-bot",
       cwd: "/home/kali/discordbots/dev-news-bot",
-      script: "bot.py",
+      script: "dev_news_bot.py",
       interpreter: "/home/kali/discordbots/dev-news-bot/.venv/bin/python",
       interpreter_args: "",
       autorestart: true,

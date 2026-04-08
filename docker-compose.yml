@@ -11,11 +11,14 @@ services:
     container_name: dev-news-bot
     restart: unless-stopped
     environment:
-      - SEEN_PATH=/data/seen.json
       - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DEV_CHANNEL_ID=${DEV_CHANNEL_ID:-}
       - CHANNEL_ID=${CHANNEL_ID}
-      - POLL_HOURS=${POLL_HOURS:-3}
-      - SLACK_WEBHOOK_URLS=${SLACK_WEBHOOK_URLS:-}
+      - ARCHIVE_PATH=/data/dev_news_archive.jsonl
+      - DEDUPE_INDEX_PATH=/data/dev_news_dedupe.json
+      - MAX_POSTS_PER_RUN=${MAX_POSTS_PER_RUN:-8}
+      - MAX_PER_SOURCE=${MAX_PER_SOURCE:-2}
+      - SEND_TEXT_DIGEST=${SEND_TEXT_DIGEST:-false}
     volumes:
       - dev-news-bot-data:/data
 
