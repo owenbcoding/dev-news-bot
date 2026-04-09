@@ -8,7 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Application
-COPY bot.py .
+COPY bot.py dev_news_bot.py news_core.py ./
 
 # Non-root user and data dir for persisted state (mount volume on /data in Portainer)
 RUN adduser --disabled-password --gecos "" appuser \
